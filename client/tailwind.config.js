@@ -32,6 +32,27 @@ export default {
           900: "rgb(var(--color-secondary-900) / <alpha-value>)",
         },
       },
+      fontFamily: {
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          "sans-serif",
+        ],
+      },
+      fontWeight: {
+        light: "300",
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "700",
+        extrabold: "800",
+      },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",
         "slide-in": "slideIn 0.3s ease-out",
