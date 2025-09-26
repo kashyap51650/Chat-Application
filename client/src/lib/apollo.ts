@@ -94,16 +94,16 @@ export const apolloClient = new ApolloClient({
     typePolicies: {
       Query: {
         fields: {
-          messages: {
-            merge(existing = [], incoming) {
-              return [...existing, ...incoming];
-            },
-          },
-          directMessages: {
-            merge(existing = [], incoming) {
-              return [...existing, ...incoming];
-            },
-          },
+          // messages: {
+          //   merge(existing = [], incoming) {
+          //     return [...existing, ...incoming];
+          //   },
+          // },
+          // directMessages: {
+          //   merge(existing = [], incoming) {
+          //     return [...existing, ...incoming];
+          //   },
+          // },
           myChatRooms: {
             merge(_, incoming) {
               return incoming;

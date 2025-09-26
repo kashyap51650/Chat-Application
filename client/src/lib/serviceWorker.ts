@@ -24,11 +24,6 @@ export class ServiceWorkerManager {
           "/service-worker.js"
         );
 
-        console.log(
-          "Service Worker registered successfully:",
-          this.registration
-        );
-
         // Handle updates
         this.registration.addEventListener("updatefound", () => {
           const newWorker = this.registration?.installing;
