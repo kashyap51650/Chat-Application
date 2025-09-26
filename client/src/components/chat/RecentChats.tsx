@@ -3,19 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { GET_MY_CONVERSATIONS } from "../../graphql/operations";
 import { useChat } from "../../context/ChatContext";
-import { useAuth } from "../../context/AuthContext";
-import type { ChatConversation } from "../../types";
+import type { ChatConversation, User } from "../../types";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import AppHeader from "../ui/AppHeader";
+import SearchBar from "../ui/SearchBar";
 import ConversationItem from "./ConversationItem";
 import CreateChatModal from "./CreateChatModal";
-import { MessageCircle, Plus, Search } from "lucide-react";
+import { MessageCircle, Plus } from "lucide-react";
 
 const RecentChats: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { setConversations, selectedConversation } = useChat();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { setConversations, selectedConversation, setSelectedConversation } =
+    useChat();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filteredConversations, setFilteredConversations] = useState<
     ChatConversation[]
@@ -32,34 +31,9 @@ const RecentChats: React.FC = () => {
   useEffect(() => {
     if (conversations.length > 0) {
       setConversations(conversations);
+      setFilteredConversations(conversations);
     }
   }, [conversations, setConversations]);
-
-  useEffect(() => {
-    if (conversations.length > 0) {
-      const filtered = conversations.filter((conversation) => {
-        if ("name" in conversation) {
-          // ChatRoom
-          return conversation.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        } else {
-          // DirectChat
-          const otherUser = conversation.participants.find(
-            (p) => p.id !== user?.id
-          );
-          return (
-            otherUser?.username
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) || false
-          );
-        }
-      });
-      setFilteredConversations(filtered);
-    } else {
-      setFilteredConversations([]);
-    }
-  }, [conversations, searchTerm, user?.id]);
 
   // Navigate to chat when a conversation is selected
   useEffect(() => {
@@ -67,6 +41,20 @@ const RecentChats: React.FC = () => {
       navigate(`/chat/${selectedConversation.id}`);
     }
   }, [selectedConversation, navigate]);
+
+  const handleSearchResult = (result: any) => {
+    if (result.type === "conversation" && result.conversation) {
+      setSelectedConversation(result.conversation);
+    } else if (result.type === "message" && result.conversation) {
+      // Navigate to conversation and potentially scroll to message
+      setSelectedConversation(result.conversation);
+    }
+  };
+
+  const handleNewChatWithUser = (user: User) => {
+    setShowCreateModal(true);
+    // You could pre-populate the modal with the selected user
+  };
 
   if (loading) {
     return (
@@ -101,18 +89,12 @@ const RecentChats: React.FC = () => {
 
         {/* Search Bar */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search conversations..."
-            />
-          </div>
+          <SearchBar
+            conversations={conversations}
+            onResultSelect={handleSearchResult}
+            onNewChatWithUser={handleNewChatWithUser}
+            placeholder="Search conversations, messages, or users..."
+          />
         </div>
 
         {/* Conversations List */}
@@ -123,22 +105,18 @@ const RecentChats: React.FC = () => {
                 <MessageCircle className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? "No conversations found" : "No conversations yet"}
+                No conversations yet
               </h3>
               <p className="text-gray-500 mb-6">
-                {searchTerm
-                  ? `Try searching for something else`
-                  : `Start your first conversation with someone`}
+                Start your first conversation with someone
               </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Start New Chat
-                </button>
-              )}
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Start New Chat
+              </button>
             </div>
           ) : (
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
