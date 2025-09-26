@@ -102,17 +102,19 @@ self.addEventListener("fetch", (event) => {
 
 // Handle GraphQL requests with offline support
 async function handleGraphQLRequest(request) {
+  const networkRequest = request.clone();
+
   try {
     // Try network first
-    const response = await fetch(request);
+    const response = await fetch(networkRequest);
 
     if (response.ok) {
       // Cache successful GraphQL responses for queries
-      const requestClone = request.clone();
+      const networkRequest = request.clone();
       const responseClone = response.clone();
 
       // Only cache queries, not mutations
-      const body = await requestClone.json();
+      const body = await networkRequest.json();
       if (body.query && !body.query.includes("mutation")) {
         const cache = await caches.open(RUNTIME_CACHE);
         cache.put(request, responseClone);
