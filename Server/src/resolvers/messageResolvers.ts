@@ -110,9 +110,8 @@ export const messageResolvers = {
         await message.populate("chatRoom");
 
         // Publish to subscribers
-        pubsub.publish(MESSAGE_ADDED, {
+        pubsub.publish(`${MESSAGE_ADDED}_${chatRoomId}`, {
           messageAdded: message,
-          chatRoomId,
         });
       } else if (directChatId) {
         // Handle direct chat message
@@ -139,7 +138,7 @@ export const messageResolvers = {
           directChat: directChatId,
           messageType,
         });
-
+        console.log(message);
         await message.save();
 
         // Update direct chat's last message
@@ -151,9 +150,8 @@ export const messageResolvers = {
         await message.populate("directChat");
 
         // Publish to subscribers
-        pubsub.publish(DIRECT_MESSAGE_ADDED, {
+        pubsub.publish(`${DIRECT_MESSAGE_ADDED}_${directChatId}`, {
           directMessageAdded: message,
-          directChatId,
         });
       }
 
@@ -203,18 +201,16 @@ export const messageResolvers = {
           typeof message.chatRoom === "string"
             ? message.chatRoom
             : message.chatRoom._id;
-        pubsub.publish(MESSAGE_EDITED, {
+        pubsub.publish(`${MESSAGE_EDITED}_${chatRoomId}`, {
           messageEdited: message,
-          chatRoomId: chatRoomId.toString(),
         });
       } else if (message.directChat) {
         const directChatId =
           typeof message.directChat === "string"
             ? message.directChat
             : message.directChat._id;
-        pubsub.publish(DIRECT_MESSAGE_EDITED, {
+        pubsub.publish(`${DIRECT_MESSAGE_EDITED}_${directChatId}`, {
           directMessageEdited: message,
-          directChatId: directChatId.toString(),
         });
       }
 
@@ -259,9 +255,8 @@ export const messageResolvers = {
         await Message.findByIdAndDelete(messageId);
 
         // Publish to subscribers
-        pubsub.publish(MESSAGE_DELETED, {
+        pubsub.publish(`${MESSAGE_DELETED}_${chatRoomId}`, {
           messageDeleted: messageId,
-          chatRoomId: chatRoomId.toString(),
         });
       } else if (message.directChat) {
         const directChatId =
@@ -284,9 +279,8 @@ export const messageResolvers = {
         await Message.findByIdAndDelete(messageId);
 
         // Publish to subscribers
-        pubsub.publish(DIRECT_MESSAGE_DELETED, {
+        pubsub.publish(`${DIRECT_MESSAGE_DELETED}_${directChatId}`, {
           directMessageDeleted: messageId,
-          directChatId: directChatId.toString(),
         });
       }
 
@@ -296,103 +290,183 @@ export const messageResolvers = {
 
   Subscription: {
     messageAdded: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { chatRoomId }: { chatRoomId: string },
         context: Context
       ) => {
-        // Note: In a real application, you should verify the user has access to this chat room
-        return pubsub.asyncIterator(MESSAGE_ADDED);
-      },
-      resolve: (payload: any, { chatRoomId }: { chatRoomId: string }) => {
-        // Only return messages for the specific chat room
-        if (payload.chatRoomId === chatRoomId) {
-          return payload.messageAdded;
+        // Verify user authentication and access to chat room
+        const user = requireAuth(context);
+
+        const chatRoom = await ChatRoom.findById(chatRoomId);
+        if (!chatRoom) {
+          throw new UserInputError("Chat room not found");
         }
-        return null;
+
+        const isParticipant = chatRoom.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this chat room"
+          );
+        }
+
+        return pubsub.asyncIterator([`${MESSAGE_ADDED}_${chatRoomId}`]);
       },
     },
 
     messageEdited: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { chatRoomId }: { chatRoomId: string },
         context: Context
       ) => {
-        return pubsub.asyncIterator(MESSAGE_EDITED);
-      },
-      resolve: (payload: any, { chatRoomId }: { chatRoomId: string }) => {
-        if (payload.chatRoomId === chatRoomId) {
-          return payload.messageEdited;
+        // Verify user authentication and access to chat room
+        const user = requireAuth(context);
+
+        const chatRoom = await ChatRoom.findById(chatRoomId);
+        if (!chatRoom) {
+          throw new UserInputError("Chat room not found");
         }
-        return null;
+
+        const isParticipant = chatRoom.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this chat room"
+          );
+        }
+
+        return pubsub.asyncIterator([`${MESSAGE_EDITED}_${chatRoomId}`]);
       },
     },
 
     messageDeleted: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { chatRoomId }: { chatRoomId: string },
         context: Context
       ) => {
-        return pubsub.asyncIterator(MESSAGE_DELETED);
-      },
-      resolve: (payload: any, { chatRoomId }: { chatRoomId: string }) => {
-        if (payload.chatRoomId === chatRoomId) {
-          return payload.messageDeleted;
+        // Verify user authentication and access to chat room
+        const user = requireAuth(context);
+
+        const chatRoom = await ChatRoom.findById(chatRoomId);
+        if (!chatRoom) {
+          throw new UserInputError("Chat room not found");
         }
-        return null;
+
+        const isParticipant = chatRoom.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this chat room"
+          );
+        }
+
+        return pubsub.asyncIterator([`${MESSAGE_DELETED}_${chatRoomId}`]);
       },
     },
 
     // Direct Chat Subscriptions
     directMessageAdded: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { directChatId }: { directChatId: string },
         context: Context
       ) => {
-        // Note: In a real application, you should verify the user has access to this direct chat
-        return pubsub.asyncIterator(DIRECT_MESSAGE_ADDED);
-      },
-      resolve: (payload: any, { directChatId }: { directChatId: string }) => {
-        // Only return messages for the specific direct chat
-        if (payload.directChatId === directChatId) {
-          return payload.directMessageAdded;
+        // Verify user authentication and access to direct chat
+        const user = requireAuth(context);
+
+        const directChat = await DirectChat.findById(directChatId);
+        if (!directChat) {
+          throw new UserInputError("Direct chat not found");
         }
-        return null;
+
+        const isParticipant = directChat.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this direct chat"
+          );
+        }
+
+        return pubsub.asyncIterator([
+          `${DIRECT_MESSAGE_ADDED}_${directChatId}`,
+        ]);
       },
     },
 
     directMessageEdited: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { directChatId }: { directChatId: string },
         context: Context
       ) => {
-        return pubsub.asyncIterator(DIRECT_MESSAGE_EDITED);
-      },
-      resolve: (payload: any, { directChatId }: { directChatId: string }) => {
-        if (payload.directChatId === directChatId) {
-          return payload.directMessageEdited;
+        // Verify user authentication and access to direct chat
+        const user = requireAuth(context);
+
+        const directChat = await DirectChat.findById(directChatId);
+        if (!directChat) {
+          throw new UserInputError("Direct chat not found");
         }
-        return null;
+
+        const isParticipant = directChat.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this direct chat"
+          );
+        }
+
+        return pubsub.asyncIterator([
+          `${DIRECT_MESSAGE_EDITED}_${directChatId}`,
+        ]);
       },
     },
 
     directMessageDeleted: {
-      subscribe: (
+      subscribe: async (
         _: any,
         { directChatId }: { directChatId: string },
         context: Context
       ) => {
-        return pubsub.asyncIterator(DIRECT_MESSAGE_DELETED);
-      },
-      resolve: (payload: any, { directChatId }: { directChatId: string }) => {
-        if (payload.directChatId === directChatId) {
-          return payload.directMessageDeleted;
+        // Verify user authentication and access to direct chat
+        const user = requireAuth(context);
+
+        const directChat = await DirectChat.findById(directChatId);
+        if (!directChat) {
+          throw new UserInputError("Direct chat not found");
         }
-        return null;
+
+        const isParticipant = directChat.participants.some(
+          (participantId: any) =>
+            participantId.toString() === user._id.toString()
+        );
+
+        if (!isParticipant) {
+          throw new ForbiddenError(
+            "You are not a participant of this direct chat"
+          );
+        }
+
+        return pubsub.asyncIterator([
+          `${DIRECT_MESSAGE_DELETED}_${directChatId}`,
+        ]);
       },
     },
   },

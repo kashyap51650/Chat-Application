@@ -78,7 +78,6 @@ export const userResolvers = {
 
     login: async (_: any, { input }: { input: any }) => {
       const { email, password } = input;
-      console.log(email, password);
       // Find user
       const user = await User.findOne({ email }).select("+password");
       if (!user) {
@@ -101,8 +100,6 @@ export const userResolvers = {
         userId: user._id.toString(),
         email: user.email,
       });
-
-      console.log(token);
 
       return {
         token,
