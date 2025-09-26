@@ -6,13 +6,14 @@ import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../context/AuthContext";
 import type { ChatConversation } from "../../types";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import AppHeader from "../ui/AppHeader";
 import ConversationItem from "./ConversationItem";
 import CreateChatModal from "./CreateChatModal";
 import { MessageCircle, Plus, Search } from "lucide-react";
 
 const RecentChats: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { setConversations, selectedConversation } = useChat();
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -96,66 +97,7 @@ const RecentChats: React.FC = () => {
     <>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              {/* Left side - App title and user info */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <h1 className="text-xl font-semibold text-gray-900">Chats</h1>
-                </div>
-
-                {/* User info */}
-                <div className="hidden sm:flex items-center p-2 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {user?.username?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user?.username}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right side - Actions */}
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Chat
-                </button>
-
-                <button
-                  onClick={logout}
-                  className="p-2 text-gray-400 hover:text-gray-500 rounded-md"
-                  title="Logout"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AppHeader onNewChatClick={() => setShowCreateModal(true)} />
 
         {/* Search Bar */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -200,7 +142,7 @@ const RecentChats: React.FC = () => {
             </div>
           ) : (
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-              <div className="p-4 space-y-1">
+              <div className="divide-y divide-gray-100">
                 {filteredConversations.map((conversation) => (
                   <ConversationItem
                     key={conversation.id}
