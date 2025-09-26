@@ -70,7 +70,7 @@ const ChatApp: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -78,7 +78,7 @@ const ChatApp: React.FC = () => {
 
   if (!selectedConversation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Chat not found</p>
           <button
@@ -93,7 +93,7 @@ const ChatApp: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-100 flex relative">
+    <div className="h-screen bg-white flex relative">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
@@ -116,18 +116,18 @@ const ChatApp: React.FC = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header with Back Button */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleBackToChats}
-              className="p-2 rounded-lg hover:bg-gray-100"
+              className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
 
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg hover:bg-gray-100"
+              className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
             >
               <svg
                 className="w-6 h-6"

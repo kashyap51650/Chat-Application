@@ -31,7 +31,7 @@ const ChatHeader: React.FC = () => {
     if (!otherUser) return null;
 
     return (
-      <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="p-4 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Avatar user={otherUser} size="md" showOnlineStatus />
@@ -40,14 +40,21 @@ const ChatHeader: React.FC = () => {
                 {otherUser.username}
               </h2>
               <div className="flex items-center text-sm text-gray-500">
-                <span>{otherUser.isOnline ? "Online" : "Offline"}</span>
+                <span className="flex items-center">
+                  <div
+                    className={`w-2 h-2 rounded-full mr-2 ${
+                      otherUser.isOnline ? "bg-green-400" : "bg-gray-300"
+                    }`}
+                  />
+                  {otherUser.isOnline ? "Online" : "Last seen recently"}
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {/* Chat info button */}
-            <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg">
+            <button className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -74,7 +81,7 @@ const ChatHeader: React.FC = () => {
     const onlineParticipants = chatRoom.participants.filter((p) => p.isOnline);
 
     return (
-      <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="p-4 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             {/* Group chat - show group avatar */}
@@ -101,9 +108,9 @@ const ChatHeader: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {/* Chat info button */}
-            <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg">
+            <button className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -120,7 +127,7 @@ const ChatHeader: React.FC = () => {
             </button>
 
             {/* More options */}
-            <button className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg">
+            <button className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200">
               <svg
                 className="w-5 h-5"
                 fill="none"

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@apollo/client/react";
-import { GET_MY_CONVERSATIONS } from "../../graphql/operations";
+import { useQuery, useMutation } from "@apollo/client/react";
+import {
+  GET_MY_CONVERSATIONS,
+  CREATE_OR_GET_DIRECT_CHAT,
+} from "../../graphql/operations";
 import { useChat } from "../../context/ChatContext";
 import type { ChatConversation, User } from "../../types";
 import LoadingSpinner from "../ui/LoadingSpinner";
@@ -23,6 +26,10 @@ const RecentChats: React.FC = () => {
   const { data, loading, error } = useQuery(GET_MY_CONVERSATIONS, {
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
+  });
+
+  const [createOrGetDirectChat] = useMutation(CREATE_OR_GET_DIRECT_CHAT, {
+    refetchQueries: [{ query: GET_MY_CONVERSATIONS }],
   });
 
   const conversations: ChatConversation[] =
@@ -51,9 +58,23 @@ const RecentChats: React.FC = () => {
     }
   };
 
-  const handleNewChatWithUser = (user: User) => {
-    setShowCreateModal(true);
-    // You could pre-populate the modal with the selected user
+  const handleNewChatWithUser = async (user: User) => {
+    try {
+      const { data } = await createOrGetDirectChat({
+        variables: {
+          participantId: user.id,
+        },
+      });
+
+      if ((data as any)?.createOrGetDirectChat) {
+        const directChat = (data as any).createOrGetDirectChat;
+        setSelectedConversation(directChat);
+      }
+    } catch (error) {
+      console.error("Error creating/getting direct chat:", error);
+      // Fallback to direct navigation
+      navigate(`/chat/${user.id}`);
+    }
   };
 
   if (loading) {

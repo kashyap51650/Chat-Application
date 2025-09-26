@@ -101,11 +101,11 @@ const MessageList: React.FC = () => {
 
   if (!selectedConversation) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-secondary-50">
+      <div className="flex-1 flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-20 h-20 bg-secondary-200 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-10 h-10 text-secondary-400"
+              className="w-10 h-10 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -118,10 +118,10 @@ const MessageList: React.FC = () => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-secondary-900 mb-2">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
             Welcome to Chat App
           </h3>
-          <p className="text-secondary-600">Select a chat to start messaging</p>
+          <p className="text-gray-600">Select a chat to start messaging</p>
         </div>
       </div>
     );
@@ -142,13 +142,13 @@ const MessageList: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 sm:p-4 bg-secondary-50 chat-scrollbar">
+    <div className="flex-1 overflow-y-auto px-4 py-6 bg-white">
       {messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <div className="text-center px-4">
-            <div className="w-16 h-16 bg-secondary-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-secondary-400"
+                className="w-8 h-8 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -161,10 +161,10 @@ const MessageList: React.FC = () => {
                 />
               </svg>
             </div>
-            <p className="text-secondary-500 text-sm sm:text-base">
+            <p className="text-gray-500 text-sm sm:text-base">
               No messages yet
             </p>
-            <p className="text-secondary-400 text-xs sm:text-sm mt-1">
+            <p className="text-gray-400 text-xs sm:text-sm mt-1">
               Be the first to send a message!
             </p>
           </div>
@@ -183,6 +183,7 @@ const MessageList: React.FC = () => {
                 key={message.id}
                 message={message}
                 showAvatar={shouldShowAvatar(message, index)}
+                isDirectChat={!isChatRoom(selectedConversation)}
               />
             ))}
           <div ref={messagesEndRef} />
