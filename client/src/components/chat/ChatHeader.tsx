@@ -3,6 +3,8 @@ import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../ui/Avatar";
 import type { ChatRoom, DirectChat } from "../../types";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Helper function to check if conversation is a DirectChat
 const isDirectChat = (conversation: any): conversation is DirectChat => {
@@ -15,12 +17,18 @@ const isChatRoom = (conversation: any): conversation is ChatRoom => {
 };
 
 const ChatHeader: React.FC = () => {
-  const { selectedConversation } = useChat();
+  const { selectedConversation, setSelectedConversation } = useChat();
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
 
   if (!selectedConversation) {
     return null;
   }
+
+  const navigateBackToChats = () => {
+    setSelectedConversation(null);
+    navigate("/");
+  };
 
   // Handle DirectChat
   if (isDirectChat(selectedConversation)) {
@@ -34,6 +42,10 @@ const ChatHeader: React.FC = () => {
       <div className="p-4 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
+            <ArrowLeft
+              className="lg:hidden mr-4 h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              onClick={navigateBackToChats}
+            />
             <Avatar user={otherUser} size="md" showOnlineStatus />
             <div className="ml-3">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -84,6 +96,10 @@ const ChatHeader: React.FC = () => {
       <div className="p-4 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
+            <ArrowLeft
+              className="lg:hidden mr-4 h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700"
+              onClick={navigateBackToChats}
+            />
             {/* Group chat - show group avatar */}
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <svg

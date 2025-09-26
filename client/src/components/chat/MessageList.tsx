@@ -53,7 +53,7 @@ const MessageList: React.FC = () => {
     } else if (directMessages && (directMessages as any).directMessages) {
       setMessages((directMessages as any).directMessages);
     }
-  }, [roomMessages, directMessages, setMessages]);
+  }, [roomMessages, directMessages]);
 
   // Subscribe to new chat room messages
   useSubscription(MESSAGE_ADDED_SUBSCRIPTION, {
@@ -78,6 +78,7 @@ const MessageList: React.FC = () => {
     variables: { directChatId: selectedConversation?.id },
     skip: !isDirectChatSelected,
     onData: ({ data }: { data: any }) => {
+      console.log("Direct message subscription data:", data);
       if (data?.data?.directMessageAdded) {
         const newMessage = data.data.directMessageAdded;
         setMessages((prev) => {

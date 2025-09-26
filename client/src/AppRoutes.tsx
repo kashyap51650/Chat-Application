@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import AuthPage from "./components/auth/AuthPage";
 import ChatApp from "./components/chat/ChatApp";
-import RecentChats from "./components/chat/RecentChats";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
 const AppRoutes: React.FC = () => {
@@ -27,7 +26,7 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/"
         element={
-          isAuthenticated ? <RecentChats /> : <Navigate to="/auth" replace />
+          isAuthenticated ? <ChatApp /> : <Navigate to="/auth" replace />
         }
       />
       <Route

@@ -67,7 +67,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // Perform search whenever search term changes
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setSearchResults([]);
+      //   setSearchResults([]);
       setShowResults(false);
       return;
     }

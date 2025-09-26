@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { GET_MY_CONVERSATIONS } from "../../graphql/operations";
@@ -15,7 +15,6 @@ import { ArrowLeft } from "lucide-react";
 const ChatApp: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const {
     selectedConversation,
     setSelectedConversation,
@@ -66,6 +65,7 @@ const ChatApp: React.FC = () => {
 
   const handleBackToChats = () => {
     navigate("/");
+    setSelectedConversation(null);
   };
 
   if (loading) {
@@ -76,89 +76,88 @@ const ChatApp: React.FC = () => {
     );
   }
 
-  if (!selectedConversation) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">Chat not found</p>
-          <button
-            onClick={handleBackToChats}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Chats
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-screen bg-white flex relative">
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile Overlay - Remove this as we don't need sliding */}
 
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-30 w-80 transform transition-transform duration-300 ease-in-out
-          lg:relative lg:translate-x-0 lg:w-80 xl:w-96
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        <ChatSidebar onClose={() => setSidebarOpen(false)} />
+      {/* Small Screen: Page-like layout - Show either sidebar OR chat */}
+      <div className="w-full lg:hidden">
+        {selectedConversation ? (
+          // Chat Page - Full screen chat interface
+          <div className="h-screen flex flex-col">
+            {/* Mobile Header with Back Button */}
+            <div className="flex items-center justify-between p-4 bg-white border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleBackToChats}
+                  className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 ml-4">
+                <h1 className="text-lg font-semibold text-gray-900 truncate">
+                  {getConversationTitle()}
+                </h1>
+              </div>
+            </div>
+
+            <MessageList />
+            <MessageInput />
+          </div>
+        ) : (
+          // Chat List Page - Full screen sidebar
+          <div className="h-screen">
+            <ChatSidebar />
+          </div>
+        )}
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header with Back Button */}
-        <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-100">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleBackToChats}
-              className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex-1 ml-4">
-            <h1 className="text-lg font-semibold text-gray-900 truncate">
-              {getConversationTitle()}
-            </h1>
-          </div>
+      {/* Large Screen: Side-by-side layout */}
+      <div className="hidden lg:flex w-full">
+        {/* Sidebar */}
+        <div className="w-80 xl:w-96 border-r border-gray-100">
+          <ChatSidebar />
         </div>
 
-        {/* Desktop/Tablet Chat Header */}
-        <div className="hidden lg:block">
-          <ChatHeader />
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedConversation ? (
+            <>
+              <ChatHeader />
+              <MessageList />
+              <MessageInput />
+            </>
+          ) : (
+            // Welcome screen for desktop when no chat is selected
+            <div className="flex-1 flex items-center justify-center bg-white">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-10 h-10 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Welcome to Chat App
+                </h3>
+                <p className="text-gray-600">
+                  Select a chat to start messaging
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-
-        <MessageList />
-        <MessageInput />
       </div>
     </div>
   );

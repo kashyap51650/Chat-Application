@@ -16,8 +16,7 @@ import { MessageCircle, Plus } from "lucide-react";
 
 const RecentChats: React.FC = () => {
   const navigate = useNavigate();
-  const { setConversations, selectedConversation, setSelectedConversation } =
-    useChat();
+  const { setConversations, setSelectedConversation } = useChat();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filteredConversations, setFilteredConversations] = useState<
     ChatConversation[]
@@ -43,11 +42,11 @@ const RecentChats: React.FC = () => {
   }, [conversations, setConversations]);
 
   // Navigate to chat when a conversation is selected
-  useEffect(() => {
-    if (selectedConversation) {
-      navigate(`/chat/${selectedConversation.id}`);
-    }
-  }, [selectedConversation, navigate]);
+  // useEffect(() => {
+  //   if (selectedConversation) {
+  //     navigate(`/chat/${selectedConversation.id}`);
+  //   }
+  // }, [selectedConversation, navigate]);
 
   const handleSearchResult = (result: any) => {
     if (result.type === "conversation" && result.conversation) {
@@ -114,7 +113,7 @@ const RecentChats: React.FC = () => {
             conversations={conversations}
             onResultSelect={handleSearchResult}
             onNewChatWithUser={handleNewChatWithUser}
-            placeholder="Search conversations, messages, or users..."
+            placeholder="Search chats, messages, or users"
           />
         </div>
 

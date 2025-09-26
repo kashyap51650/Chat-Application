@@ -1,22 +1,16 @@
-import React, { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client/react";
-import { GET_MY_CONVERSATIONS, GET_USERS } from "../../graphql/operations";
-import { useAuth } from "../../context/AuthContext";
+import React, { useEffect, useState } from "react";
 import { useChat } from "../../context/ChatContext";
-import UserItem from "./UserItem";
-import LoadingSpinner from "../ui/LoadingSpinner";
-import Button from "../ui/Button";
-import type { ChatConversation, User } from "../../types";
-import CreateChatModal from "./CreateChatModal";
+import { GET_MY_CONVERSATIONS, GET_USERS } from "../../graphql/operations";
 import { cn } from "../../lib/utils";
+import type { ChatConversation, User } from "../../types";
+import AppHeader from "../ui/AppHeader";
+import LoadingSpinner from "../ui/LoadingSpinner";
 import ConversationItem from "./ConversationItem";
+import CreateChatModal from "./CreateChatModal";
+import UserItem from "./UserItem";
 
-interface ChatSidebarProps {
-  onClose?: () => void;
-}
-
-const ChatSidebar: React.FC<ChatSidebarProps> = ({ onClose }) => {
-  const { user, logout } = useAuth();
+const ChatSidebar: React.FC = () => {
   const { setUsers, setConversations } = useChat();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"conversations" | "users">(
@@ -79,91 +73,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onClose }) => {
     <>
       <div className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            {/* Current User */}
-            <div className="flex items-center p-2 bg-gray-50 rounded-lg">
-              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {user?.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.username}
-                </p>
-                <p className="text-xs text-gray-600">{user?.email}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Close button for mobile */}
-              {onClose && (
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
-                  title="Close"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                size="sm"
-                className="p-2"
-                title="New Group Chat"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </Button>
-              <Button
-                onClick={logout}
-                variant="ghost"
-                size="sm"
-                className="p-2"
-                title="Logout"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
+        <AppHeader onNewChatClick={() => setShowCreateModal(true)} />
 
         {/* Tabs */}
         <div className="flex bg-gray-100 h-12">
@@ -191,7 +101,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onClose }) => {
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto space-y-2 chat-scrollbar">
+        <div className="flex-1 overflow-y-auto chat-scrollbar">
           {activeTab === "conversations" ? (
             // Conversations Tab
             conversations.length === 0 ? (
