@@ -26,7 +26,7 @@ interface ChatDB extends DBSchema {
   };
 }
 
-export const chatDB = openDB<ChatDB>("chat-db", 1, {
+export const chatDB = openDB<ChatDB>("chat-db", 2, {
   upgrade(db) {
     if (!db.objectStoreNames.contains("users")) {
       const userStore = db.createObjectStore("users", { keyPath: "id" });
