@@ -9,6 +9,7 @@ export interface User {
   updatedAt: Date;
 }
 
+export type MessageStatus = "pending" | "sent" | "delivered";
 export interface Message {
   id: string;
   content: string;
@@ -20,6 +21,19 @@ export interface Message {
   editedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  status?: MessageStatus; // Optional status for pending messages
+}
+
+export interface PendingMessage {
+  id: string; // Temporary ID for pending messages
+  content: string;
+  sender: User;
+  chatRoomId?: string;
+  directChatId?: string;
+  messageType: MessageType;
+  createdAt: Date;
+  updatedAt: Date;
+  status: MessageStatus; // Should be "pending" initially
 }
 
 export interface ChatRoom {
@@ -110,8 +124,10 @@ export interface ChatContextType {
   setSelectedChatRoom: (chatRoom: ChatRoom | null) => void;
   selectedDirectChat: DirectChat | null;
   setSelectedDirectChat: (directChat: DirectChat | null) => void;
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  messages: (Message | PendingMessage)[];
+  setMessages: React.Dispatch<
+    React.SetStateAction<(Message | PendingMessage)[]>
+  >;
   onlineUsers: Set<string>;
   setOnlineUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   users: User[];
