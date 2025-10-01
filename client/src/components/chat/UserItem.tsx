@@ -55,7 +55,7 @@ const UserItem: React.FC<UserItemProps> = ({ user }) => {
   return (
     <div
       onClick={handleUserClick}
-      className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
+      className={`flex items-center p-4 cursor-pointer transition-colors border-b border-gray-200 ${
         loading
           ? "opacity-50 cursor-not-allowed"
           : "hover:bg-gray-100 active:bg-gray-200"
@@ -77,11 +77,11 @@ const UserItem: React.FC<UserItemProps> = ({ user }) => {
           )}
         </div>
         {/* Online status indicator */}
-        <div
+        {/* <div
           className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${
             user.isOnline ? "bg-green-500" : "bg-gray-400"
           }`}
-        />
+        /> */}
       </div>
 
       {/* User info */}
@@ -96,7 +96,7 @@ const UserItem: React.FC<UserItemProps> = ({ user }) => {
             </span>
           )}
         </div>
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <div
             className={`w-2 h-2 rounded-full mr-2 ${
               user.isOnline ? "bg-green-500" : "bg-gray-400"
@@ -105,7 +105,7 @@ const UserItem: React.FC<UserItemProps> = ({ user }) => {
           <p className="text-xs text-gray-600">
             {user.isOnline ? "Online" : "Offline"}
           </p>
-        </div>
+        </div> */}
       </div>
 
       {loading && (
