@@ -82,6 +82,15 @@ export const ChatStorage = {
     return db.getAll("pendingMessages");
   },
 
+  async getPendingMessagesByChat(chatId: string) {
+    const db = await chatDB;
+    const allPending = await db.getAll("pendingMessages");
+    // Filter by directChatId for direct chats or chatRoomId for group chats
+    return allPending.filter(
+      (msg) => msg.directChatId === chatId || msg.chatRoomId === chatId
+    );
+  },
+
   async deletePendingMessage(tempId: string) {
     const db = await chatDB;
     return db.delete("pendingMessages", tempId);
