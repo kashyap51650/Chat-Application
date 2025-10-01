@@ -5,7 +5,6 @@ import { apolloClient } from "./lib/apollo";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
 import AppRoutes from "./AppRoutes";
-import OfflineIndicator from "./components/ui/OfflineIndicator";
 import PWAInstallPrompt from "./components/ui/PWAInstallPrompt";
 import "./index.css";
 
@@ -16,7 +15,6 @@ const App: React.FC = () => {
         <AuthProvider>
           <ChatProvider>
             <div className="App min-h-screen bg-gray-50">
-              <OfflineIndicator />
               <PWAInstallPrompt />
               <AppRoutes />
             </div>
