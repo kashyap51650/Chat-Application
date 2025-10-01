@@ -22,7 +22,7 @@ self.addEventListener("install", (event) => {
     Promise.all([
       caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
       // Initialize offline message queue
-      self.registration.sync?.register("background-sync"),
+      // self.registration.sync?.register("background-sync"),
     ])
   );
   self.skipWaiting();
@@ -76,6 +76,11 @@ self.addEventListener("fetch", (event) => {
 
         return fetch(request)
           .then((response) => {
+            // Ignore chrome-extension requests or anything non-http(s)
+            if (!request.url.startsWith("http")) {
+              return;
+            }
+
             // Cache successful responses
             if (response.status === 200) {
               const responseClone = response.clone();
@@ -105,19 +110,26 @@ async function handleGraphQLRequest(request) {
   const networkRequest = request.clone();
 
   try {
-    // Try network first
     const response = await fetch(networkRequest);
 
     if (response.ok) {
-      // Cache successful GraphQL responses for queries
-      const networkRequest = request.clone();
-      const responseClone = response.clone();
+      const body = await request.clone().json();
 
       // Only cache queries, not mutations
-      const body = await networkRequest.json();
       if (body.query && !body.query.includes("mutation")) {
         const cache = await caches.open(RUNTIME_CACHE);
-        cache.put(request, responseClone);
+
+        // Create a custom cache key (GET-like URL)
+        const cacheKey = new Request(
+          `/graphql-cache?query=${encodeURIComponent(
+            body.query
+          )}&variables=${encodeURIComponent(
+            JSON.stringify(body.variables || {})
+          )}`,
+          { method: "GET" }
+        );
+
+        cache.put(cacheKey, response.clone());
       }
     }
 
@@ -125,20 +137,28 @@ async function handleGraphQLRequest(request) {
   } catch (error) {
     console.log("[SW] GraphQL request failed, trying cache:", error);
 
-    // If network fails, try cache for queries
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
+    const body = await request.clone().json();
+
+    // For queries, try cache with the derived key
+    if (body.query && !body.query.includes("mutation")) {
+      const cacheKey = new Request(
+        `/graphql-cache?query=${encodeURIComponent(
+          body.query
+        )}&variables=${encodeURIComponent(
+          JSON.stringify(body.variables || {})
+        )}`,
+        { method: "GET" }
+      );
+      const cachedResponse = await caches.match(cacheKey);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
     }
 
-    // For mutations, queue them for later
-    const requestClone = request.clone();
-    const body = await requestClone.json();
-
+    // For mutations, queue them
     if (body.query && body.query.includes("mutation")) {
       await queueOfflineAction(body);
 
-      // Return a success response for mutations to avoid UI errors
       return new Response(
         JSON.stringify({
           data: {
@@ -160,7 +180,7 @@ async function handleGraphQLRequest(request) {
       );
     }
 
-    // Return network error for queries
+    // Fallback error for queries
     return new Response(
       JSON.stringify({
         errors: [
