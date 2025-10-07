@@ -13,8 +13,7 @@ const STATIC_ASSETS = [
 ];
 
 // GraphQL endpoint
-const GRAPHQL_ENDPOINT = "http://localhost:4000/graphql";
-
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_APP_SERVER_URL;
 // Install Service Worker
 self.addEventListener("install", (event) => {
   console.log("[SW] Install event");
