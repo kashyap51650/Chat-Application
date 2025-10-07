@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
-import {
-  MessageCircle,
-  Plus,
-  LogOut,
-  Settings,
-  User,
-  ChevronDown,
-} from "lucide-react";
+import { MessageCircle, Plus, LogOut, Settings, User } from "lucide-react";
 
 interface AppHeaderProps {
   onNewChatClick: () => void;

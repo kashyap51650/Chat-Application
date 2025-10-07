@@ -25,10 +25,7 @@ const MessageInput: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const message = await sendMessage(messageContent);
-      // if (message) {
-      //   setMessages((prev) => [...prev, message]);
-      // }
+      await sendMessage(messageContent);
     } catch (error) {
       console.error("Send message error:", error);
       // Restore message on error

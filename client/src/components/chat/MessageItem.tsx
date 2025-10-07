@@ -3,7 +3,7 @@ import type { Message, PendingMessage } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
 import Avatar from "../ui/Avatar";
-import { formatTime, isChatRoom } from "../../lib/utils";
+import { isChatRoom } from "../../lib/utils";
 import { cn } from "../../lib/utils";
 import { Clock, AlertCircle, RefreshCw } from "lucide-react";
 
