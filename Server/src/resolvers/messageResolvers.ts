@@ -138,7 +138,7 @@ export const messageResolvers = {
           directChat: directChatId,
           messageType,
         });
-        console.log(message);
+
         await message.save();
 
         // Update direct chat's last message
