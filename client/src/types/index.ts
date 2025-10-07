@@ -9,7 +9,7 @@ export interface User {
   updatedAt: Date;
 }
 
-export type MessageStatus = "pending" | "sent" | "delivered";
+export type MessageStatus = "pending" | "sent" | "delivered" | "failed";
 export interface Message {
   id: string;
   content: string;
@@ -134,4 +134,10 @@ export interface ChatContextType {
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   conversations: ChatConversation[];
   setConversations: React.Dispatch<React.SetStateAction<ChatConversation[]>>;
+}
+
+export interface DirectMessageAddedResponse {
+  data: {
+    directMessageAdded: Message;
+  };
 }

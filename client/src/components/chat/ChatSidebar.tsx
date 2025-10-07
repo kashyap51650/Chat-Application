@@ -1,9 +1,9 @@
-import { useQuery } from "@apollo/client/react";
 import React, { useEffect, useState } from "react";
 import { useChat } from "../../context/ChatContext";
-import { GET_MY_CONVERSATIONS, GET_USERS } from "../../graphql/operations";
+import { useChats } from "../../hooks/useChats";
+import { useUsers } from "../../hooks/useUsers";
 import { cn } from "../../lib/utils";
-import type { ChatConversation, User } from "../../types";
+import type { ChatConversation } from "../../types";
 import AppHeader from "../ui/AppHeader";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ConversationItem from "./ConversationItem";
@@ -11,25 +11,16 @@ import CreateChatModal from "./CreateChatModal";
 import UserItem from "./UserItem";
 
 const ChatSidebar: React.FC = () => {
-  const { setUsers, setConversations } = useChat();
+  const { setUsers } = useChat();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"conversations" | "users">(
     "conversations"
   );
 
-  const { data, loading, error } = useQuery(GET_MY_CONVERSATIONS, {
-    // pollInterval: 30000, // Poll every 30 seconds for new chats
-  });
+  const { chats, loading, error } = useChats();
+  const { users, loading: usersLoading, error: usersError } = useUsers();
 
-  const {
-    data: usersData,
-    loading: usersLoading,
-    error: usersError,
-  } = useQuery(GET_USERS);
-
-  const conversations: ChatConversation[] =
-    (data as any)?.myConversations || [];
-  const users: User[] = (usersData as any)?.users || [];
+  const conversations: ChatConversation[] = chats;
 
   // Update users in context when data changes
   useEffect(() => {
@@ -37,13 +28,6 @@ const ChatSidebar: React.FC = () => {
       setUsers(users);
     }
   }, [users, setUsers]);
-
-  // Update conversations in context when data changes
-  useEffect(() => {
-    if (conversations.length > 0) {
-      setConversations(conversations);
-    }
-  }, [conversations, setConversations]);
 
   if (loading) {
     return (

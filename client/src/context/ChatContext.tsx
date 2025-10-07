@@ -1,21 +1,20 @@
-import React, { createContext, useContext, useState } from "react";
-import type { ReactNode } from "react";
+// ChatContext.tsx
+import React, { createContext, useContext, useEffect, useState } from "react";
 import type {
+  ChatContextType,
+  ChatConversation,
   ChatRoom,
   DirectChat,
-  ChatConversation,
   Message,
-  ChatContextType,
+  PendingMessage,
   User,
-} from "../types";
+} from "../types/index";
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-interface ChatProviderProps {
-  children: ReactNode;
-}
-
-export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
+export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [selectedConversation, setSelectedConversation] =
     useState<ChatConversation | null>(null);
   const [selectedChatRoom, setSelectedChatRoom] = useState<ChatRoom | null>(
@@ -23,35 +22,40 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   );
   const [selectedDirectChat, setSelectedDirectChat] =
     useState<DirectChat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+
+  const [messages, setMessages] = useState<(Message | PendingMessage)[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
 
-  const value: ChatContextType = {
-    selectedConversation,
-    setSelectedConversation,
-    selectedChatRoom,
-    setSelectedChatRoom,
-    selectedDirectChat,
-    setSelectedDirectChat,
-    messages,
-    setMessages,
-    onlineUsers,
-    setOnlineUsers,
-    users,
-    setUsers,
-    conversations,
-    setConversations,
-  };
-
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+  return (
+    <ChatContext.Provider
+      value={{
+        selectedConversation,
+        setSelectedConversation,
+        selectedChatRoom,
+        setSelectedChatRoom,
+        selectedDirectChat,
+        setSelectedDirectChat,
+        messages,
+        setMessages,
+        onlineUsers,
+        setOnlineUsers,
+        users,
+        setUsers,
+        conversations,
+        setConversations,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  );
 };
 
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error("useChat must be used within a ChatProvider");
+  if (!context) {
+    throw new Error("useChat must be used within ChatProvider");
   }
   return context;
 };

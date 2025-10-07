@@ -1,25 +1,34 @@
 import React from "react";
-import type { Message } from "../../types";
+import type { Message, PendingMessage } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
 import Avatar from "../ui/Avatar";
 import { formatTime, isChatRoom } from "../../lib/utils";
 import { cn } from "../../lib/utils";
+import { Clock, AlertCircle, RefreshCw } from "lucide-react";
 
 interface MessageItemProps {
-  message: Message;
+  message: Message | PendingMessage;
   showAvatar?: boolean;
   isDirectChat?: boolean;
+  onRetry?: (tempId: string) => void;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
   message,
   showAvatar = true,
   isDirectChat = false,
+  onRetry,
 }) => {
   const { user: currentUser } = useAuth();
   const { selectedConversation } = useChat();
   const isOwn = currentUser?.id === message.sender.id;
+
+  // Check if this is a pending message
+  const isPending = "status" in message;
+  const pendingMessage = isPending ? (message as PendingMessage) : null;
+  const isFailedMessage = pendingMessage?.status === "failed";
+  const isPendingMessage = pendingMessage?.status === "pending";
 
   // Determine if we should show avatar - never in direct chats, only in group chats for others
   const actualIsDirectChat =
@@ -51,9 +60,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
         <div
           className={cn(
-            "px-4 py-2.5 rounded-2xl max-w-full break-words",
+            "px-4 py-2.5 rounded-2xl max-w-full break-words relative",
             isOwn
-              ? "bg-blue-500 text-white rounded-br-md shadow-sm"
+              ? isPendingMessage
+                ? "bg-blue-300 text-white rounded-br-md shadow-sm opacity-70"
+                : isFailedMessage
+                ? "bg-red-400 text-white rounded-br-md shadow-sm"
+                : "bg-blue-500 text-white rounded-br-md shadow-sm"
               : "bg-gray-100 text-gray-900 rounded-bl-md shadow-sm"
           )}
         >
@@ -61,12 +74,39 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
           <div
             className={cn(
-              "flex items-center justify-end mt-1 text-xs opacity-70",
-              isOwn ? "text-blue-100" : "text-gray-600"
+              "flex items-center justify-between mt-1 text-xs",
+              isOwn
+                ? isPendingMessage || isFailedMessage
+                  ? "text-blue-100"
+                  : "text-blue-100 opacity-70"
+                : "text-gray-600 opacity-70"
             )}
           >
-            <span>{formatTime(message.createdAt)}</span>
-            {message.isEdited && <span className="ml-1">·edited</span>}
+            {/* Message status indicators */}
+            <div className="flex items-center space-x-1 ml-2">
+              {isPendingMessage && (
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-xs">Pending</span>
+                </div>
+              )}
+
+              {isFailedMessage && (
+                <div className="flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span className="text-xs">Failed</span>
+                  {onRetry && pendingMessage && (
+                    <button
+                      onClick={() => onRetry(pendingMessage.id)}
+                      className="ml-1 p-1 hover:bg-red-500 rounded transition-colors"
+                      title="Retry sending"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1,96 +1,22 @@
 import React, { useEffect, useRef } from "react";
-import { useQuery, useSubscription } from "@apollo/client/react";
-import {
-  GET_MESSAGES,
-  GET_DIRECT_MESSAGES,
-  MESSAGE_ADDED_SUBSCRIPTION,
-  DIRECT_MESSAGE_ADDED_SUBSCRIPTION,
-} from "../../graphql/operations";
 import { useChat } from "../../context/ChatContext";
 import MessageItem from "./MessageItem";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import type { Message } from "../../types";
+import type { Message, PendingMessage } from "../../types";
 import { isChatRoom } from "../../lib/utils";
+import { useMessages } from "../../hooks/useMessages";
+import { usePendingSync } from "../../hooks/usePendingSync";
 
 const MessageList: React.FC = () => {
-  const { selectedConversation, messages, setMessages } = useChat();
+  const { selectedConversation } = useChat();
+  const { messages, loading } = useMessages(selectedConversation);
+  console.log(messages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isRoomSelected =
-    selectedConversation && isChatRoom(selectedConversation);
-  const isDirectChatSelected =
-    selectedConversation && !isChatRoom(selectedConversation);
-
-  // Query for chat room messages
-  const { data: roomMessages, loading: roomLoading } = useQuery(GET_MESSAGES, {
-    variables: {
-      chatRoomId: selectedConversation?.id,
-      limit: 50,
-      offset: 0,
-    },
-    skip: !isRoomSelected,
-  });
-
-  // Query for direct chat messages
-  const { data: directMessages, loading: directLoading } = useQuery(
-    GET_DIRECT_MESSAGES,
-    {
-      variables: {
-        directChatId: selectedConversation?.id,
-        limit: 50,
-        offset: 0,
-      },
-      skip: !isDirectChatSelected,
-    }
+  // Sync pending messages when online
+  const { loading: loadingPendingMessages } = usePendingSync(
+    selectedConversation?.id || ""
   );
-
-  const loading = roomLoading || directLoading;
-
-  // Update messages when data changes
-  React.useEffect(() => {
-    if (roomMessages && (roomMessages as any).messages) {
-      setMessages((roomMessages as any).messages);
-    } else if (directMessages && (directMessages as any).directMessages) {
-      setMessages((directMessages as any).directMessages);
-    }
-  }, [roomMessages, directMessages]);
-
-  // Subscribe to new chat room messages
-  useSubscription(MESSAGE_ADDED_SUBSCRIPTION, {
-    variables: { chatRoomId: selectedConversation?.id },
-    skip: !isRoomSelected,
-    onData: ({ data }: { data: any }) => {
-      if (data?.data?.messageAdded) {
-        const newMessage = data.data.messageAdded;
-        setMessages((prev) => {
-          // Avoid duplicates
-          if (prev.some((msg: Message) => msg.id === newMessage.id)) {
-            return prev;
-          }
-          return [...prev, newMessage];
-        });
-      }
-    },
-  });
-
-  // Subscribe to new direct messages
-  useSubscription(DIRECT_MESSAGE_ADDED_SUBSCRIPTION, {
-    variables: { directChatId: selectedConversation?.id },
-    skip: !isDirectChatSelected,
-    onData: ({ data }: { data: any }) => {
-      console.log("Direct message subscription data:", data);
-      if (data?.data?.directMessageAdded) {
-        const newMessage = data.data.directMessageAdded;
-        setMessages((prev) => {
-          // Avoid duplicates
-          if (prev.some((msg: Message) => msg.id === newMessage.id)) {
-            return prev;
-          }
-          return [...prev, newMessage];
-        });
-      }
-    },
-  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -128,7 +54,7 @@ const MessageList: React.FC = () => {
     );
   }
 
-  if (loading) {
+  if (loading || loadingPendingMessages) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner />
@@ -136,7 +62,10 @@ const MessageList: React.FC = () => {
     );
   }
 
-  const shouldShowAvatar = (message: Message, index: number): boolean => {
+  const shouldShowAvatar = (
+    message: Message | PendingMessage,
+    index: number
+  ): boolean => {
     if (index === 0) return true;
     const prevMessage = messages[index - 1];
     return prevMessage.sender.id !== message.sender.id;
@@ -185,6 +114,7 @@ const MessageList: React.FC = () => {
                 message={message}
                 showAvatar={shouldShowAvatar(message, index)}
                 isDirectChat={!isChatRoom(selectedConversation)}
+                // onRetry={retryFailedMessage}
               />
             ))}
           <div ref={messagesEndRef} />
