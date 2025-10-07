@@ -14,13 +14,13 @@ import { getMainDefinition } from "@apollo/client/utilities";
 
 // HTTP Link for queries and mutations
 const httpLink = createHttpLink({
-  uri: "http://localhost:4000/graphql",
+  uri: import.meta.env.VITE_APP_SERVER_URL,
 });
 
 // WebSocket Link for subscriptions
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://localhost:4000/graphql",
+    url: import.meta.env.VITE_APP_SERVER_URL,
     connectionParams: () => {
       const token = localStorage.getItem("token");
       return {
