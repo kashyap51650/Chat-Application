@@ -16,7 +16,7 @@ import { getUser } from "./middleware/auth";
 dotenv.config();
 
 const PORT = process.env.PORT || 4000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
+const CORS_ORIGIN = process.env.CORS_ORIGIN;
 
 async function startServer() {
   // Connect to database
@@ -26,12 +26,9 @@ async function startServer() {
   const app = express();
 
   // Enable CORS
-  app.use(
-    cors({
-      origin: CORS_ORIGIN,
-      credentials: true,
-    })
-  );
+  // app.use(
+  //   cors()
+  // );
 
   // Create Apollo Server
   const server = new ApolloServer({
