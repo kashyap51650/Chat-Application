@@ -26,9 +26,7 @@ async function startServer() {
   const app = express();
 
   // Enable CORS
-  // app.use(
-  //   cors()
-  // );
+  app.use(cors());
 
   // Create Apollo Server
   const server = new ApolloServer({
