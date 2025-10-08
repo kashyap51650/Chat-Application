@@ -89,7 +89,7 @@ const ChatSidebar: React.FC = () => {
           {activeTab === "conversations" ? (
             // Conversations Tab
             conversations.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="flex flex-col justify-center items-center py-8 h-full ">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
                     className="w-8 h-8 text-gray-400"
