@@ -86,19 +86,28 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          {conversation.lastMessage ? (
-            <p className="text-xs text-gray-600 truncate">
-              {isGroupChat && (
-                <span className="font-medium text-xs">
-                  {conversation.lastMessage.sender.username}:
-                </span>
-              )}
-              {truncateText(conversation.lastMessage.content, 30)}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-400 italic">No messages yet</p>
-          )}
+        <div>
+          <div className="flex items-center justify-between">
+            {conversation.lastMessage ? (
+              <p className="text-xs text-gray-600 truncate">
+                {isGroupChat && (
+                  <span className="font-medium text-xs">
+                    {conversation.lastMessage.sender.username}:
+                  </span>
+                )}
+                {truncateText(conversation.lastMessage.content, 30)}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 italic">No messages yet</p>
+            )}
+          </div>
+          <div>
+            {conversation.unreadCount && conversation.unreadCount > 0 && (
+              <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-red-600 rounded-full">
+                {conversation.unreadCount}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,6 @@ import { usePendingSync } from "../../hooks/usePendingSync";
 const MessageList: React.FC = () => {
   const { selectedConversation } = useChat();
   const { messages, loading } = useMessages(selectedConversation);
-  console.log(messages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Sync pending messages when online

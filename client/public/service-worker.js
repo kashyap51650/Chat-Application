@@ -1,324 +1,157 @@
 const CACHE_NAME = "chat-app-cache-v2";
 const RUNTIME_CACHE = "chat-app-runtime-v2";
-const OFFLINE_QUEUE_STORAGE = "offline-message-queue";
+const OFFLINE_QUEUE_DB = "offline-message-queue";
+const GRAPHQL_ENDPOINT = "http://localhost:4000/graphql";
 
-// Assets to cache immediately
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/static/js/bundle.js",
   "/static/css/main.css",
   "/manifest.json",
-  // Add your built assets here
 ];
 
-// GraphQL endpoint
-const GRAPHQL_ENDPOINT = import.meta.env.VITE_APP_SERVER_URL;
-// Install Service Worker
+// ---------------- INSTALL ----------------
 self.addEventListener("install", (event) => {
-  console.log("[SW] Install event");
+  console.log("[SW] Installing...");
   event.waitUntil(
-    Promise.all([
-      caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
-      // Initialize offline message queue
-      // self.registration.sync?.register("background-sync"),
-    ])
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate Service Worker
+// ---------------- ACTIVATE ----------------
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate event");
+  console.log("[SW] Activating...");
   event.waitUntil(
-    Promise.all([
-      // Clean up old caches
-      caches.keys().then((cacheNames) =>
-        Promise.all(
-          cacheNames.map((name) => {
-            if (name !== CACHE_NAME && name !== RUNTIME_CACHE) {
-              console.log("[SW] Deleting old cache:", name);
-              return caches.delete(name);
-            }
-          })
-        )
-      ),
-      // Take control of all clients
-      self.clients.claim(),
-    ])
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((name) => {
+          if (name !== CACHE_NAME && name !== RUNTIME_CACHE) {
+            console.log("[SW] Deleting old cache:", name);
+            return caches.delete(name);
+          }
+        })
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
-// Fetch event with caching strategies
+// ---------------- FETCH ----------------
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle GraphQL requests
+  // Handle GraphQL requests separately
   if (url.href === GRAPHQL_ENDPOINT) {
     event.respondWith(handleGraphQLRequest(request));
     return;
   }
 
-  // Handle static assets
-  if (
-    request.destination === "document" ||
-    request.destination === "script" ||
-    request.destination === "style" ||
-    request.destination === "image"
-  ) {
+  // Static asset caching
+  if (["document", "script", "style", "image"].includes(request.destination)) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
 
         return fetch(request)
           .then((response) => {
-            // Ignore chrome-extension requests or anything non-http(s)
-            if (!request.url.startsWith("http")) {
-              return;
-            }
-
-            // Cache successful responses
-            if (response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(RUNTIME_CACHE).then((cache) => {
-                cache.put(request, responseClone);
-              });
+            if (response.ok && request.url.startsWith("http")) {
+              const clone = response.clone();
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(request, clone));
             }
             return response;
           })
-          .catch(() => {
-            // Return offline page for navigation requests
-            if (request.destination === "document") {
-              return caches.match("/index.html");
-            }
-          });
+          .catch(
+            () =>
+              request.destination === "document" && caches.match("/index.html")
+          );
       })
     );
-    return;
   }
-
-  // Default: try network first, then cache
-  event.respondWith(fetch(request).catch(() => caches.match(request)));
 });
 
-// Handle GraphQL requests with offline support
+// ---------------- GRAPHQL HANDLER ----------------
 async function handleGraphQLRequest(request) {
-  const networkRequest = request.clone();
+  const body = await request.clone().json();
 
-  try {
-    const response = await fetch(networkRequest);
-
-    if (response.ok) {
-      const body = await request.clone().json();
-
-      // Only cache queries, not mutations
-      if (body.query && !body.query.includes("mutation")) {
+  // Queries (cache)
+  if (body.query && !body.query.includes("mutation")) {
+    try {
+      const response = await fetch(request.clone());
+      if (response.ok) {
         const cache = await caches.open(RUNTIME_CACHE);
-
-        // Create a custom cache key (GET-like URL)
-        const cacheKey = new Request(
-          `/graphql-cache?query=${encodeURIComponent(
-            body.query
-          )}&variables=${encodeURIComponent(
-            JSON.stringify(body.variables || {})
-          )}`,
-          { method: "GET" }
-        );
-
-        cache.put(cacheKey, response.clone());
+        const key = makeCacheKey(body);
+        cache.put(key, response.clone());
       }
+      return response;
+    } catch {
+      const cache = await caches.open(RUNTIME_CACHE);
+      const cached = await cache.match(makeCacheKey(body));
+      if (cached) return cached;
+      return offlineErrorResponse();
     }
+  }
 
-    return response;
-  } catch (error) {
-    console.log("[SW] GraphQL request failed, trying cache:", error);
-
-    const body = await request.clone().json();
-
-    // For queries, try cache with the derived key
-    if (body.query && !body.query.includes("mutation")) {
-      const cacheKey = new Request(
-        `/graphql-cache?query=${encodeURIComponent(
-          body.query
-        )}&variables=${encodeURIComponent(
-          JSON.stringify(body.variables || {})
-        )}`,
-        { method: "GET" }
-      );
-      const cachedResponse = await caches.match(cacheKey);
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-    }
-
-    // For mutations, queue them
-    if (body.query && body.query.includes("mutation")) {
+  // Mutations (queue)
+  if (body.query && body.query.includes("mutation")) {
+    try {
+      return await fetch(request.clone());
+    } catch {
+      console.log("[SW] Offline - queueing mutation...");
       await queueOfflineAction(body);
-
-      return new Response(
-        JSON.stringify({
-          data: {
-            sendMessage: {
-              id: `offline-${Date.now()}`,
-              content: body.variables?.input?.content || "",
-              sender: { id: "current-user" },
-              messageType: "text",
-              isEdited: false,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          },
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return fakeSendMessageResponse(body);
     }
-
-    // Fallback error for queries
-    return new Response(
-      JSON.stringify({
-        errors: [
-          { message: "Network unavailable. Some data may be outdated." },
-        ],
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
   }
+
+  return fetch(request);
 }
 
-// Queue offline actions
-async function queueOfflineAction(action) {
-  const db = await openDB();
-  const transaction = db.transaction(["actions"], "readwrite");
-  const store = transaction.objectStore("actions");
+// ---------------- HELPERS ----------------
+function makeCacheKey(body) {
+  return new Request(
+    `/graphql-cache?query=${encodeURIComponent(
+      body.query
+    )}&variables=${encodeURIComponent(JSON.stringify(body.variables || {}))}`,
+    { method: "GET" }
+  );
+}
 
-  await store.add({
-    id: Date.now(),
-    action: action,
-    timestamp: Date.now(),
-    retries: 0,
+function offlineErrorResponse() {
+  return new Response(
+    JSON.stringify({
+      errors: [{ message: "Offline: cached data unavailable." }],
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
+}
+
+function fakeSendMessageResponse(body) {
+  const content = body.variables?.input?.content || "";
+  return new Response(
+    JSON.stringify({
+      data: {
+        sendMessage: {
+          id: `offline-${Date.now()}`,
+          content,
+          sender: { id: "current-user" },
+          messageType: "text",
+          isEdited: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
+}
+
+function notifyClients(type, action) {
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((c) => c.postMessage({ type, action }));
   });
 }
-
-// Background sync for offline actions
-self.addEventListener("sync", (event) => {
-  console.log("[SW] Background sync event:", event.tag);
-
-  if (event.tag === "background-sync") {
-    event.waitUntil(processOfflineActions());
-  }
-});
-
-// Process queued offline actions
-async function processOfflineActions() {
-  try {
-    const db = await openDB();
-    const transaction = db.transaction(["actions"], "readwrite");
-    const store = transaction.objectStore("actions");
-    const actions = await store.getAll();
-
-    for (const actionItem of actions) {
-      try {
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(actionItem.action),
-        });
-
-        if (response.ok) {
-          // Action successful, remove from queue
-          await store.delete(actionItem.id);
-          console.log("[SW] Offline action synced:", actionItem.action);
-
-          // Notify clients about successful sync
-          self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-              client.postMessage({
-                type: "OFFLINE_ACTION_SYNCED",
-                action: actionItem.action,
-              });
-            });
-          });
-        } else if (actionItem.retries < 3) {
-          // Increment retries
-          await store.put({
-            ...actionItem,
-            retries: actionItem.retries + 1,
-          });
-        } else {
-          // Too many retries, remove from queue
-          await store.delete(actionItem.id);
-          console.log(
-            "[SW] Offline action failed after retries:",
-            actionItem.action
-          );
-        }
-      } catch (error) {
-        console.log("[SW] Error processing offline action:", error);
-        if (actionItem.retries < 3) {
-          await store.put({
-            ...actionItem,
-            retries: actionItem.retries + 1,
-          });
-        } else {
-          await store.delete(actionItem.id);
-        }
-      }
-    }
-  } catch (error) {
-    console.error("[SW] Error in processOfflineActions:", error);
-  }
-}
-
-// IndexedDB helper
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(OFFLINE_QUEUE_STORAGE, 1);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("actions")) {
-        const store = db.createObjectStore("actions", { keyPath: "id" });
-        store.createIndex("timestamp", "timestamp", { unique: false });
-      }
-    };
-  });
-}
-
-// Handle messages from main thread
-self.addEventListener("message", (event) => {
-  console.log("[SW] Message received:", event.data);
-
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-
-  if (event.data && event.data.type === "GET_OFFLINE_STATUS") {
-    event.ports[0].postMessage({
-      isOnline: navigator.onLine,
-    });
-  }
-});
-
-// Network status change
-self.addEventListener("online", () => {
-  console.log("[SW] Back online, processing offline queue");
-  self.registration.sync?.register("background-sync");
-});
-
-self.addEventListener("offline", () => {
-  console.log("[SW] Gone offline");
-});

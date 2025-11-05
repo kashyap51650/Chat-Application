@@ -539,3 +539,22 @@ export const CHAT_ROOM_UPDATED_SUBSCRIPTION = gql`
     }
   }
 `;
+
+export const MESSAGE_RECEIVED_SUBSCRIPTION = gql`
+  subscription OnMessageReceived {
+    messageReceived {
+      id
+      content
+      sender {
+        id
+        username
+        avatar
+      }
+      messageType
+      isEdited
+      editedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;

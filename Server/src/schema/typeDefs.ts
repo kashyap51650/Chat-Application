@@ -155,6 +155,7 @@ export const typeDefs = gql`
     directMessageEdited(directChatId: ID!): Message!
     messageDeleted(chatRoomId: ID!): ID!
     directMessageDeleted(directChatId: ID!): ID!
+    messageReceived: Message!
 
     # User status updates
     userStatusChanged: User!

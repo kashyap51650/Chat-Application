@@ -20,7 +20,7 @@ const httpLink = createHttpLink({
 // WebSocket Link for subscriptions
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: import.meta.env.VITE_APP_SERVER_URL,
+    url: import.meta.env.VITE_APP_WEBSOCKET_URL,
     connectionParams: () => {
       const token = localStorage.getItem("token");
       return {
@@ -104,25 +104,30 @@ export const apolloClient = new ApolloClient({
           //     return [...existing, ...incoming];
           //   },
           // },
-          myChatRooms: {
-            merge(_, incoming) {
-              return incoming;
-            },
-          },
-          myDirectChats: {
-            merge(_, incoming) {
-              return incoming;
-            },
-          },
-          myConversations: {
-            merge(_, incoming) {
-              return incoming;
-            },
-          },
+          // myChatRooms: {
+          //   merge(_, incoming) {
+          //     return incoming;
+          //   },
+          // },
+          // myDirectChats: {
+          //   merge(_, incoming) {
+          //     return incoming;
+          //   },
+          // },
+          // myConversations: {
+          //   merge(_, incoming) {
+          //     return incoming;
+          //   },
+          // },
         },
       },
     },
   }),
+
+  devtools: {
+    enabled: true,
+    name: "ChatApp Apollo Client",
+  },
   defaultOptions: {
     watchQuery: {
       errorPolicy: "all",

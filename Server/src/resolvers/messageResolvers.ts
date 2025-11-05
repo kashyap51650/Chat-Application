@@ -13,6 +13,19 @@ const MESSAGE_EDITED = "MESSAGE_EDITED";
 const DIRECT_MESSAGE_EDITED = "DIRECT_MESSAGE_EDITED";
 const MESSAGE_DELETED = "MESSAGE_DELETED";
 const DIRECT_MESSAGE_DELETED = "DIRECT_MESSAGE_DELETED";
+const MESSAGE_RECEIVED = "MESSAGE_RECEIVED";
+
+async function publishMessage(
+  message: any,
+  participants: any,
+  chatType: "directChat" | "groupChat"
+) {
+  for (const participantId of participants) {
+    pubsub.publish(`${MESSAGE_RECEIVED}_${participantId}`, {
+      messageReceived: message,
+    });
+  }
+}
 
 export const messageResolvers = {
   Query: {
@@ -113,6 +126,8 @@ export const messageResolvers = {
         pubsub.publish(`${MESSAGE_ADDED}_${chatRoomId}`, {
           messageAdded: message,
         });
+
+        publishMessage(message, chatRoom.participants, "groupChat");
       } else if (directChatId) {
         // Handle direct chat message
         const directChat = await DirectChat.findById(directChatId);
@@ -149,7 +164,15 @@ export const messageResolvers = {
         await message.populate("sender", "-password");
         await message.populate("directChat");
 
+        publishMessage(message, directChat.participants, "directChat");
+
+        console.log("Published direct message");
+
         // Publish to subscribers
+
+        // pubsub.publish(`${MESSAGE_RECEIVED}`, {
+        //   messageReceived: message,
+        // });
         pubsub.publish(`${DIRECT_MESSAGE_ADDED}_${directChatId}`, {
           directMessageAdded: message,
         });
@@ -289,6 +312,15 @@ export const messageResolvers = {
   },
 
   Subscription: {
+    // Common Subscription Triggers
+    messageReceived: {
+      subscribe: async (_: any, __: any, context: Context) => {
+        const user = requireAuth(context);
+        return pubsub.asyncIterator(`${MESSAGE_RECEIVED}_${user._id}`);
+      },
+    },
+
+    // Group Chat Subscriptions
     messageAdded: {
       subscribe: async (
         _: any,

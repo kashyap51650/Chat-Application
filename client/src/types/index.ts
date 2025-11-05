@@ -58,7 +58,15 @@ export interface DirectChat {
   updatedAt: Date;
 }
 
-export type ChatConversation = ChatRoom | DirectChat;
+export interface ChatRoomWithUnread extends ChatRoom {
+  unreadCount: number;
+}
+
+export interface DirectChatWithUnread extends DirectChat {
+  unreadCount: number;
+}
+
+export type ChatConversation = ChatRoomWithUnread | DirectChatWithUnread;
 
 export interface AuthPayload {
   token: string;
