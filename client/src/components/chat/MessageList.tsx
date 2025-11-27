@@ -2,20 +2,14 @@ import React, { useEffect, useRef } from "react";
 import { useChat } from "../../context/ChatContext";
 import MessageItem from "./MessageItem";
 import LoadingSpinner from "../ui/LoadingSpinner";
-import type { Message, PendingMessage } from "../../types";
+import type { Message } from "../../types";
 import { isChatRoom } from "../../lib/utils";
 import { useMessages } from "../../hooks/useMessages";
-import { usePendingSync } from "../../hooks/usePendingSync";
 
 const MessageList: React.FC = () => {
   const { selectedConversation } = useChat();
   const { messages, loading } = useMessages(selectedConversation);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Sync pending messages when online
-  const { loading: loadingPendingMessages } = usePendingSync(
-    selectedConversation?.id || ""
-  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,7 +47,7 @@ const MessageList: React.FC = () => {
     );
   }
 
-  if (loading || loadingPendingMessages) {
+  if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner />
@@ -61,10 +55,7 @@ const MessageList: React.FC = () => {
     );
   }
 
-  const shouldShowAvatar = (
-    message: Message | PendingMessage,
-    index: number
-  ): boolean => {
+  const shouldShowAvatar = (message: Message, index: number): boolean => {
     if (index === 0) return true;
     const prevMessage = messages[index - 1];
     return prevMessage.sender.id !== message.sender.id;

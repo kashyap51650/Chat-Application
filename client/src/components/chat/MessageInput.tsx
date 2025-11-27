@@ -2,15 +2,12 @@ import React, { useState } from "react";
 import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../ui/Button";
-import { Wifi, WifiOff } from "lucide-react";
 import { useSendMessage } from "../../hooks/useSendMessage";
-import { useConnectivity } from "../../hooks/useConnectivity";
 
 const MessageInput: React.FC = () => {
   const [message, setMessage] = useState("");
   const { selectedConversation } = useChat();
   const { user } = useAuth();
-  const isOnline = useConnectivity();
   const { sendMessage } = useSendMessage(selectedConversation!);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -48,18 +45,6 @@ const MessageInput: React.FC = () => {
 
   return (
     <div className="border-t border-gray-100 bg-white">
-      {/* Offline indicator */}
-      {!isOnline && (
-        <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-100 text-center">
-          <div className="flex items-center justify-center space-x-2 text-yellow-700">
-            <WifiOff className="w-4 h-4" />
-            <span className="text-sm">
-              You're offline. Messages will be sent when you're back online.
-            </span>
-          </div>
-        </div>
-      )}
-
       <div className="p-4">
         <form onSubmit={handleSubmit} className="flex items-end space-x-3">
           {/* Message input */}
@@ -68,16 +53,8 @@ const MessageInput: React.FC = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder={
-                isOnline
-                  ? "Type a message..."
-                  : "Type a message (will send when online)..."
-              }
-              className={`w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:border-transparent text-sm sm:text-base transition-all ${
-                isOnline
-                  ? "bg-gray-50 focus:ring-blue-500 focus:bg-white"
-                  : "bg-yellow-50 focus:ring-yellow-500 focus:bg-yellow-100"
-              }`}
+              placeholder="Type a message..."
+              className="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:border-transparent focus:ring-blue-500 focus:bg-white bg-gray-50 text-sm sm:text-base transition-all"
               style={{
                 minHeight: "48px",
                 height: "auto",
@@ -88,19 +65,6 @@ const MessageInput: React.FC = () => {
                 target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
               }}
             />
-
-            {/* Connection status indicator */}
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {isOnline ? (
-                <div title="Online">
-                  <Wifi className="w-4 h-4 text-green-500" />
-                </div>
-              ) : (
-                <div title="Offline">
-                  <WifiOff className="w-4 h-4 text-yellow-500" />
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Minimal action buttons */}
@@ -131,12 +95,8 @@ const MessageInput: React.FC = () => {
             type="submit"
             disabled={!message.trim() || isLoading}
             loading={isLoading}
-            className={`p-3 rounded-full min-w-[48px] h-12 flex items-center justify-center transition-all duration-200 ${
-              isOnline
-                ? "bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300"
-                : "bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300"
-            }`}
-            title={isOnline ? "Send message" : "Queue message for sending"}
+            className="p-3 rounded-full min-w-[48px] h-12 flex items-center justify-center transition-all duration-200 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300"
+            title="Send message"
           >
             <svg
               className="w-5 h-5"

@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import { isValidEmail, isValidPassword } from "../../lib/utils";
-import type { RegisterInput } from "../../types";
+import type { RegisterInput, AuthPayload } from "../../types";
 
 interface RegisterFormProps {
   onToggleMode: () => void;
@@ -20,7 +20,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
   const [errors, setErrors] = useState<Partial<RegisterInput>>({});
 
   const { login } = useAuth();
-  const [registerMutation, { loading }] = useMutation(REGISTER_MUTATION);
+  const [registerMutation, { loading }] = useMutation<{
+    register: AuthPayload;
+  }>(REGISTER_MUTATION);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<RegisterInput> = {};
@@ -57,14 +59,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
         variables: { input: formData },
       });
 
-      if ((data as any)?.register) {
-        login((data as any).register.token, (data as any).register.user);
+      if (data?.register) {
+        login(data.register.token, data.register.user);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Registration error:", error);
-      if (error.message.includes("email")) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("email")) {
         setErrors({ email: "Email already exists" });
-      } else if (error.message.includes("username")) {
+      } else if (errorMessage.includes("username")) {
         setErrors({ username: "Username already exists" });
       } else {
         setErrors({ email: "Registration failed. Please try again." });

@@ -6,7 +6,6 @@ import type {
   ChatRoom,
   DirectChat,
   Message,
-  PendingMessage,
   User,
 } from "../types/index";
 
@@ -23,7 +22,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedDirectChat, setSelectedDirectChat] =
     useState<DirectChat | null>(null);
 
-  const [messages, setMessages] = useState<(Message | PendingMessage)[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [users, setUsers] = useState<User[]>([]);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -52,6 +51,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext);
   if (!context) {
