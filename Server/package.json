@@ -8,7 +8,7 @@
     "dev": "nodemon",
     "dev:ts-node": "ts-node-dev --respawn --transpile-only src/index.ts",
     "start": "node dist/index.js",
-    "clean": "rimraf dist",
+    "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
