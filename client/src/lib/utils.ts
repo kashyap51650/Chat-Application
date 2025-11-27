@@ -1,6 +1,10 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { ChatRoom, DirectChat, ChatConversation } from "../types";
+import type {
+  ChatRoomWithUnread,
+  DirectChatWithUnread,
+  ChatConversation,
+} from "../types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -9,13 +13,13 @@ export function cn(...inputs: ClassValue[]) {
 // Chat type utilities
 export function isChatRoom(
   conversation: ChatConversation
-): conversation is ChatRoom {
+): conversation is ChatRoomWithUnread {
   return "name" in conversation;
 }
 
 export function isDirectChat(
   conversation: ChatConversation
-): conversation is DirectChat {
+): conversation is DirectChatWithUnread {
   return !("name" in conversation);
 }
 

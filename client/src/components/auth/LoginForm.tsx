@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import { isValidEmail } from "../../lib/utils";
-import type { LoginInput } from "../../types";
+import type { LoginInput, AuthPayload } from "../../types";
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -19,7 +19,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
   const [errors, setErrors] = useState<Partial<LoginInput>>({});
 
   const { login } = useAuth();
-  const [loginMutation, { loading, error }] = useMutation(LOGIN_MUTATION);
+  const [loginMutation, { loading, error }] = useMutation<{
+    login: AuthPayload;
+  }>(LOGIN_MUTATION);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<LoginInput> = {};
@@ -48,8 +50,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
         variables: { input: formData },
       });
 
-      if ((data as any)?.login) {
-        login((data as any).login.token, (data as any).login.user);
+      if (data?.login) {
+        login(data.login.token, data.login.user);
       }
     } catch (error) {
       console.error("Login error:", error);

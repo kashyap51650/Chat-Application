@@ -23,14 +23,14 @@ const ChatApp: React.FC = () => {
   } = useChat();
   const { user } = useAuth();
 
-  const { data, loading } = useQuery(GET_MY_CONVERSATIONS, {
-    fetchPolicy: "cache-first",
-  });
+  const { data, loading } = useQuery<{
+    myConversations: typeof conversations;
+  }>(GET_MY_CONVERSATIONS);
 
   // Update conversations when data loads
   useEffect(() => {
-    if ((data as any)?.myConversations) {
-      setConversations((data as any).myConversations);
+    if (data?.myConversations) {
+      setConversations(data.myConversations);
     }
   }, [data, setConversations]);
 

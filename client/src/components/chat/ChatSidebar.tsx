@@ -18,6 +18,7 @@ const ChatSidebar: React.FC = () => {
   );
 
   const { chats, loading, error } = useChats();
+  // console.log(error);
   const { users, loading: usersLoading, error: usersError } = useUsers();
 
   const conversations: ChatConversation[] = chats;
